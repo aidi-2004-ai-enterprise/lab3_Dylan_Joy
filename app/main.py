@@ -22,7 +22,7 @@ import pandas as pd
 from xgboost import XGBClassifier
 from typing import List
 
-# Enums and Pydantic model as per assignment
+# Enums and Pydantic model
 class Island(str, Enum):
     Torgersen = "Torgersen"
     Biscoe = "Biscoe"

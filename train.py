@@ -19,6 +19,8 @@ import json
 import logging
 import os
 import sys
+import warnings
+from typing import Tuple
 
 import pandas as pd
 import seaborn as sns
@@ -27,10 +29,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
 
-import warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*use_label_encoder.*")
 
-def setup_logging():
+
+def setup_logging() -> None:
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
@@ -38,7 +40,7 @@ def setup_logging():
     )
 
 
-def load_data():
+def load_data() -> pd.DataFrame:
     logging.info("Loading penguins dataset from seaborn...")
     penguins = sns.load_dataset("penguins")
     if penguins is None or penguins.empty:
@@ -47,14 +49,12 @@ def load_data():
     return penguins
 
 
-def preprocess_data(df):
+def preprocess_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, LabelEncoder]:
     logging.info("Preprocessing data...")
 
-    # Drop rows with missing values for simplicity
     df = df.dropna()
     logging.info("After dropping missing values: {} rows.".format(df.shape[0]))
 
-    # One-hot encode categorical features 'sex' and 'island'
     categorical_features = ["sex", "island"]
     df_encoded = pd.get_dummies(df, columns=categorical_features)
 
@@ -64,7 +64,6 @@ def preprocess_data(df):
         )
     )
 
-    # Label encode target variable 'species'
     label_encoder = LabelEncoder()
     df_encoded["species_encoded"] = label_encoder.fit_transform(df_encoded["species"])
     n_classes = len(label_encoder.classes_)
@@ -74,17 +73,14 @@ def preprocess_data(df):
         )
     )
 
-    # Save label encoder classes for future reference
     os.makedirs("app/data", exist_ok=True)
     with open("app/data/labels.json", "w") as f:
         json.dump(label_encoder.classes_.tolist(), f)
     logging.info("Saved label classes to app/data/labels.json")
 
-    # Features and target
     X = df_encoded.drop(columns=["species", "species_encoded"])
     y = df_encoded["species_encoded"]
 
-    # Save feature columns for API consistency
     with open("app/data/features.json", "w") as f:
         json.dump(X.columns.tolist(), f)
     logging.info("Saved feature columns to app/data/features.json")
@@ -92,7 +88,9 @@ def preprocess_data(df):
     return X, y, label_encoder
 
 
-def train_model(X_train, y_train, max_depth, n_estimators):
+def train_model(
+    X_train: pd.DataFrame, y_train: pd.Series, max_depth: int, n_estimators: int
+) -> XGBClassifier:
     logging.info("Training XGBoost model...")
     model = XGBClassifier(
         max_depth=max_depth,
@@ -104,7 +102,9 @@ def train_model(X_train, y_train, max_depth, n_estimators):
     return model
 
 
-def evaluate_model(model, X, y, dataset_name="dataset"):
+def evaluate_model(
+    model: XGBClassifier, X: pd.DataFrame, y: pd.Series, dataset_name: str = "dataset"
+) -> float:
     logging.info("Evaluating model on {}...".format(dataset_name))
     y_pred = model.predict(X)
     f1 = f1_score(y, y_pred, average="weighted")
@@ -114,13 +114,13 @@ def evaluate_model(model, X, y, dataset_name="dataset"):
     return f1
 
 
-def save_model(model, path="app/data/model.json"):
+def save_model(model: XGBClassifier, path: str = "app/data/model.json") -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     model.save_model(path)
     logging.info("Model saved to {}".format(path))
 
 
-def main(test_size, max_depth, n_estimators):
+def main(test_size: float, max_depth: int, n_estimators: int) -> None:
     setup_logging()
     logging.info("Starting training pipeline...")
 

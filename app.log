@@ -27,3 +27,6 @@
 2025-07-24 19:05:47,442 - INFO - Model loaded from app/data/model.json
 2025-07-24 19:05:47,442 - INFO - Feature columns loaded.
 2025-07-24 19:05:47,442 - INFO - Label classes loaded.
+2025-07-24 19:07:51,298 - INFO - Prediction successful: Adelie
+2025-07-24 19:08:15,754 - INFO - Prediction successful: Adelie
+2025-07-24 19:08:31,426 - INFO - Prediction successful: Gentoo

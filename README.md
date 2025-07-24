@@ -44,7 +44,5 @@ Invalid inputs (e.g., wrong sex or island values) will return clear validation e
 
 # Demo Video
 
-Watch a demo of the Penguin Species Prediction API:
-
-[▶️ Penguin API Demo Video](https://drive.google.com/file/d/1mTPUupXrFiNgHlyMJ2ILlzgGERq9qx6V/view?usp=sharing)
+Watch a demo via Google Drive Link of the Penguin Species Prediction API: https://drive.google.com/file/d/1mTPUupXrFiNgHlyMJ2ILlzgGERq9qx6V/view?usp=sharing
 

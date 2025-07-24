@@ -1,5 +1,17 @@
 # app/main.py
 
+"""
+main.py
+
+FastAPI app for predicting penguin species from input features using a trained XGBoost model.
+
+Features:
+- Prediction endpoint using Pydantic input validation
+- Consistent one-hot encoding with training
+- Model and metadata loading at app startup
+- Structured logging and error handling
+"""
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from enum import Enum
@@ -8,6 +20,7 @@ import json
 import os
 import pandas as pd
 from xgboost import XGBClassifier
+from typing import List
 
 # Enums and Pydantic model as per assignment
 class Island(str, Enum):
@@ -41,13 +54,16 @@ logging.basicConfig(
 app = FastAPI()
 
 # Globals to hold model and metadata
-model = None
-feature_cols = []
-label_classes = []
+model: XGBClassifier = None
+feature_cols: List[str] = []
+label_classes: List[str] = []
 
 # Load model and metadata at startup
 @app.on_event("startup")
-def load_model_and_metadata():
+def load_model_and_metadata() -> None:
+    """
+    Loads the trained XGBoost model and metadata from the app/data directory.
+    """
     global model, feature_cols, label_classes
 
     model_path = "app/data/model.json"
@@ -77,12 +93,18 @@ def load_model_and_metadata():
 
 # Root endpoint for health check
 @app.get("/")
-def root():
+def root() -> dict:
+    """
+    Health check endpoint to verify the API is running.
+    """
     return {"message": "Penguin species prediction API is running."}
 
 # Prediction endpoint
 @app.post("/predict")
-def predict(features: PenguinFeatures):
+def predict(features: PenguinFeatures) -> dict:
+    """
+    Accepts input features and returns the predicted penguin species.
+    """
     try:
         # Convert input to dict and then to DataFrame
         input_dict = features.dict()

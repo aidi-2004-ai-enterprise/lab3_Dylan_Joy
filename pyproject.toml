@@ -1,0 +1,19 @@
+[Lab_03]
+name = "lab3_dylan_joy"
+version = "0.1.0"
+description = "ML pipeline with XGBoost and FastAPI using Seaborn penguins dataset"
+authors = [
+  { name="Dylan Joy", email="dylanjoy35@gmail.com" }
+]
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "seaborn",
+  "scikit-learn",
+  "xgboost",
+  "pydantic"
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

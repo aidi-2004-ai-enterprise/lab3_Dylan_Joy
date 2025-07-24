@@ -42,6 +42,9 @@ Use the interactive docs to send POST requests to `/predict` with valid penguin 
 
 Invalid inputs (e.g., wrong sex or island values) will return clear validation errors.
 
-## Demo Video
+# Demo Video
 
-See the file `demo_requests.mp4` for a screen recording showing successful and failed API requests.
+Watch a demo of the Penguin Species Prediction API:
+
+[▶️ Penguin API Demo Video](https://drive.google.com/file/d/1mTPUupXrFiNgHlyMJ2ILlzgGERq9qx6V/view?usp=sharing)
+

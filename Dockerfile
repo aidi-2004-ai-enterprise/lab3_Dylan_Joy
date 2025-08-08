@@ -1,27 +1,25 @@
-# Use minimal official Python 3.10 slim image
+# Use a minimal base image
 FROM python:3.10-slim
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies for building and running (if needed)
+# Install system dependencies including git and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    git \
+ && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy the requirements file and install Python dependencies
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code (your app directory and other files)
+# Copy your application code into the container
 COPY ./app ./app
-COPY main.py .
-COPY train.py .
-COPY README.md .
 
-# Expose port 8080 (Cloud Run standard)
+# Expose the port your app will run on
 EXPOSE 8080
 
-# Run the app with uvicorn on port 8080, binding to 0.0.0.0 to allow outside access
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Command to run your FastAPI app with uvicorn on port 8080
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -10,6 +10,7 @@ Features:
 - Consistent one-hot encoding with training
 - Model and metadata loading at app startup
 - Structured logging and error handling
+- Loads model and metadata from Google Cloud Storage using service account
 """
 
 from fastapi import FastAPI, HTTPException
@@ -22,6 +23,38 @@ import pandas as pd
 from xgboost import XGBClassifier
 from typing import List
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+from google.cloud import storage
+import tempfile
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Read GCP config from environment variables
+credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+bucket_name = os.getenv("GCS_BUCKET_NAME")
+model_blob_name = os.getenv("MODEL_BLOB_NAME")
+features_blob_name = os.getenv("FEATURES_BLOB_NAME")
+labels_blob_name = os.getenv("LABELS_BLOB_NAME")
+
+print("Credentials Path:", credentials_path)
+print("Bucket Name:", bucket_name)
+print("Model Blob Name:", model_blob_name)
+print("Features Blob Name:", features_blob_name)
+print("Labels Blob Name:", labels_blob_name)
+
+# Set Google credentials environment variable for GCP client libraries
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
+)
 
 # Enums and Pydantic model
 class Island(str, Enum):
@@ -42,47 +75,54 @@ class PenguinFeatures(BaseModel):
     sex: Sex
     island: Island
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("app.log"),
-        logging.StreamHandler()
-    ]
-)
-
 # Globals to hold model and metadata
 model: XGBClassifier = None
 feature_cols: List[str] = []
 label_classes: List[str] = []
+
+def download_blob(bucket_name: str, blob_name: str, destination_file_name: str):
+    """
+    Downloads a blob from the GCP bucket to a local file.
+    """
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    logging.info(f"Downloading blob {blob_name} from bucket {bucket_name} to {destination_file_name}")
+    blob.download_to_filename(destination_file_name)
+    logging.info(f"Blob {blob_name} downloaded successfully.")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global model, feature_cols, label_classes
 
     try:
-        model_path = "app/data/model.json"
-        features_path = "app/data/features.json"
-        labels_path = "app/data/labels.json"
+        # Use a temporary directory to avoid file lock issues on Windows
+        with tempfile.TemporaryDirectory() as tmpdir:
+            model_path = os.path.join(tmpdir, "model.json")
+            features_path = os.path.join(tmpdir, "features.json")
+            labels_path = os.path.join(tmpdir, "labels.json")
 
-        if not (os.path.exists(model_path) and os.path.exists(features_path) and os.path.exists(labels_path)):
-            logging.error("Model or metadata files missing in app/data.")
-            raise RuntimeError("Model or metadata files missing.")
+            # Download files from GCS bucket
+            download_blob(bucket_name, model_blob_name, model_path)
+            download_blob(bucket_name, features_blob_name, features_path)
+            download_blob(bucket_name, labels_blob_name, labels_path)
 
-        model = XGBClassifier()
-        model.load_model(model_path)
-        logging.info(f"Model loaded from {model_path}")
+            # Load the model
+            model = XGBClassifier()
+            model.load_model(model_path)
+            logging.info(f"Model loaded from {model_path}")
 
-        with open(features_path, "r") as f:
-            feature_cols = json.load(f)
-        logging.info("Feature columns loaded.")
+            # Load feature columns
+            with open(features_path, "r") as f:
+                feature_cols = json.load(f)
+            logging.info("Feature columns loaded.")
 
-        with open(labels_path, "r") as f:
-            label_classes = json.load(f)
-        logging.info("Label classes loaded.")
+            # Load label classes
+            with open(labels_path, "r") as f:
+                label_classes = json.load(f)
+            logging.info("Label classes loaded.")
 
-        yield  # Application runs here
+            yield  # app runs here
 
     except Exception as e:
         logging.error(f"Failed to load model or metadata: {e}")

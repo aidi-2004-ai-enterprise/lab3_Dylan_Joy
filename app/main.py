@@ -21,6 +21,7 @@ import os
 import pandas as pd
 from xgboost import XGBClassifier
 from typing import List
+from contextlib import asynccontextmanager
 
 # Enums and Pydantic model
 class Island(str, Enum):
@@ -51,33 +52,27 @@ logging.basicConfig(
     ]
 )
 
-app = FastAPI()
-
 # Globals to hold model and metadata
 model: XGBClassifier = None
 feature_cols: List[str] = []
 label_classes: List[str] = []
 
-# Load model and metadata at startup
-@app.on_event("startup")
-def load_model_and_metadata() -> None:
-    """
-    Loads the trained XGBoost model and metadata from the app/data directory.
-    """
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global model, feature_cols, label_classes
 
-    model_path = "app/data/model.json"
-    features_path = "app/data/features.json"
-    labels_path = "app/data/labels.json"
-
     try:
+        model_path = "app/data/model.json"
+        features_path = "app/data/features.json"
+        labels_path = "app/data/labels.json"
+
         if not (os.path.exists(model_path) and os.path.exists(features_path) and os.path.exists(labels_path)):
             logging.error("Model or metadata files missing in app/data.")
             raise RuntimeError("Model or metadata files missing.")
 
         model = XGBClassifier()
         model.load_model(model_path)
-        logging.info("Model loaded from {}".format(model_path))
+        logging.info(f"Model loaded from {model_path}")
 
         with open(features_path, "r") as f:
             feature_cols = json.load(f)
@@ -87,9 +82,14 @@ def load_model_and_metadata() -> None:
             label_classes = json.load(f)
         logging.info("Label classes loaded.")
 
+        yield  # Application runs here
+
     except Exception as e:
-        logging.error("Failed to load model or metadata: {}".format(e))
+        logging.error(f"Failed to load model or metadata: {e}")
         raise
+
+# Initialize FastAPI app with lifespan handler
+app = FastAPI(lifespan=lifespan)
 
 # Root endpoint for health check
 @app.get("/")
@@ -136,10 +136,10 @@ def predict(features: PenguinFeatures) -> dict:
         pred_int = model.predict(df_input)[0]
         pred_label = label_classes[pred_int]
 
-        logging.info("Prediction successful: {}".format(pred_label))
+        logging.info(f"Prediction successful: {pred_label}")
 
         return {"predicted_species": pred_label}
 
     except Exception as e:
-        logging.error("Prediction failed: {}".format(e))
+        logging.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=400, detail="Prediction failed: " + str(e))

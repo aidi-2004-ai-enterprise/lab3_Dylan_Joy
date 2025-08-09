@@ -1,9 +1,6 @@
-__pycache__/
+__pycache__
 *.pyc
 .env
-.git/
+.git
 .gitignore
 *.md
-.venv/
-.pytest_cache/
-sa-key.json

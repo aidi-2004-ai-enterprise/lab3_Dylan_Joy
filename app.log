@@ -99,3 +99,12 @@
 2025-08-08 18:02:26,673 - INFO - Model loaded from C:\Users\dylan\AppData\Local\Temp\tmpaoub0ozc\model.json
 2025-08-08 18:02:26,680 - INFO - Feature columns loaded.
 2025-08-08 18:02:26,687 - INFO - Label classes loaded.
+2025-08-08 18:41:35,337 - INFO - Downloading blob model.json from bucket lab3-dylan-joy-bucket to C:\Users\dylan\AppData\Local\Temp\tmp8uxg2n0l\model.json
+2025-08-08 18:41:35,879 - INFO - Blob model.json downloaded successfully.
+2025-08-08 18:41:35,885 - INFO - Downloading blob features.json from bucket lab3-dylan-joy-bucket to C:\Users\dylan\AppData\Local\Temp\tmp8uxg2n0l\features.json
+2025-08-08 18:41:36,221 - INFO - Blob features.json downloaded successfully.
+2025-08-08 18:41:36,226 - INFO - Downloading blob labels.json from bucket lab3-dylan-joy-bucket to C:\Users\dylan\AppData\Local\Temp\tmp8uxg2n0l\labels.json
+2025-08-08 18:41:36,578 - INFO - Blob labels.json downloaded successfully.
+2025-08-08 18:41:36,689 - INFO - Model loaded from C:\Users\dylan\AppData\Local\Temp\tmp8uxg2n0l\model.json
+2025-08-08 18:41:36,694 - INFO - Feature columns loaded.
+2025-08-08 18:41:36,697 - INFO - Label classes loaded.

@@ -1,25 +1,25 @@
-# Use a minimal base image
+# Dockerfile
+
 FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including git and build tools
+# Install build dependencies for compiling pandas, xgboost if needed
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    git \
- && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file and install Python dependencies
+# Copy requirements and install
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy your application code into the container
-COPY ./app ./app
+# Copy app code
+COPY app ./app
+COPY tests ./tests
 
-# Expose the port your app will run on
+# Expose port for Cloud Run
 EXPOSE 8080
 
-# Command to run your FastAPI app with uvicorn on port 8080
+# Run FastAPI app with uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
